@@ -1,2 +1,3 @@
-# fitem_backup_simple
-tiankongzhise/fitem_backup_simple
+将特定文件夹下的项目打包成zip压缩包，并上传到百度网盘中备份。用来节省硬盘空间。
+采用固定加盐方式，确保压缩后的文件hash稳定，具备可比较性。
+加盐，密码设置均在config中设置
