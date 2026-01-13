@@ -27,6 +27,6 @@ class MySQLClient:
 
 
 if __name__ == '__main__':
-    client = MySQLClient(env_file=r'J:\uv_code_lib\item_backup_simple\mysql.env')
+    client = MySQLClient(env_file=r'./mysql.env')
     engine = client.get_engine()
     print(engine)
