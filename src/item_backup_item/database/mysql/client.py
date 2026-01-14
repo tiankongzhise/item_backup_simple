@@ -10,7 +10,7 @@ class MySQLClient:
     def __init__(self, database:str|None = None,env_file:str|Path|None = None,db_config:dict|None=None):
         self.database = database
         self.env_file = env_file or 'mysql.env'
-        self.db_config = db_config or {k: v for k, v in MysqlConfig.__dict__ if v is not None}
+        self.db_config = db_config or MysqlConfig.engine_config
         self.engine = None
 
     def get_engine(self):
