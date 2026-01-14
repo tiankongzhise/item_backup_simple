@@ -33,12 +33,19 @@ def test_overcount_folder(path):
     except ValueError as e:
         print("Folder has too many files")
 
+def test_hash_file(path):
+    print("Testing hash file: ", path)
+    service = CalculateHashService()
+    result = service.calculate_file_hash(path)
+    print("File hash: ", result)
+
 if __name__ == "__main__":
-    oversize_file = r'd:\测试用例\oversize_file.zip'
-    oversize_folder = r'd:\测试用例\oversize_folder'
-    empty_folder = r'd:\测试用例\empty_folder'
-    overcount_folder = r'd:\测试用例\overcount_folder'
-    test_oversize_file(oversize_file)
-    test_oversize_folder(oversize_folder)
-    test_empty_folder(empty_folder)
-    test_overcount_folder(overcount_folder)
+    # oversize_file = r'd:\测试用例\oversize_file.zip'
+    # oversize_folder = r'd:\测试用例\oversize_folder'
+    # empty_folder = r'd:\测试用例\empty_folder'
+    # overcount_folder = r'd:\测试用例\overcount_folder'
+    # test_oversize_file(oversize_file)
+    # test_oversize_folder(oversize_folder)
+    # test_empty_folder(empty_folder)
+    # test_overcount_folder(overcount_folder)
+    test_hash_file(r'e:\压缩结果\20260114\解压密码_H_x123456789\移动文件测试源.zip')

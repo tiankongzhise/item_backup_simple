@@ -15,6 +15,10 @@ def _is_file(file_info: str|Path|dict) -> bool:
             return file_info.is_file()
         case dict():
             return Path(file_info['source_path']).is_file()
+        case str():
+            return Path(file_info).is_file()
+        case _:
+            raise ValueError(f"Invalid file_info: {file_info}")
 
 def _verify_file_for_hashing(file_info: str|Path|dict) -> Path:
     if _is_oversize(file_info):
