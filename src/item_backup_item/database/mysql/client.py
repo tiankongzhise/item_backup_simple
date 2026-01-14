@@ -74,11 +74,15 @@ class MySQLClient:
             stmt = select(model)
             return session.scalars(stmt).all()
 
-    def update_data(self, model:MysqlBase, data:list[MysqlBase]):
+    def update_data(self, model:MysqlBase, data:list[dict]):
         engine = self.get_engine()
+        changed_rows = 0
         with Session(engine) as session:
-            session.execute(update(model), data)
+            results = session.execute(update(model), data)
             session.commit()
+            for result in results:
+                changed_rows += result.rowcount
+        return changed_rows
 
     def create_query_stmt(self, model:MysqlBase, query_params:dict):
         stmt = select(model)

@@ -6,6 +6,4 @@ if __name__ == '__main__':
     db_client = MySQLClient()
     db_client.drop_schema()
     main()
-    db_data = db_client.get_all_data(ItemProcessRecord)
-    for data in db_data:
-        print(data)
+    print("All processes completed.")

@@ -1,5 +1,7 @@
-from .classify_process import classify_process
+from .classify import classify_process
+from .hash import hash_process
+
 
 __all__ = [
-    'classify_process'
+    'classify_process', 'hash_process'
 ]
