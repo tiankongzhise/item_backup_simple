@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "item-backup-simple"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dowhen>=0.1.0",
+    "pandas>=2.3.3",
+    "pydantic>=2.12.5",
+    "pymysql>=1.1.2",
+    "python-dotenv>=1.2.1",
+    "pyzipper>=0.3.6",
+    "sqlalchemy>=2.0.45",
+    "tqdm>=4.67.1",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[[tool.uv.index]]
+name = "tuna-mirro"
+url="https://pypi.tuna.tsinghua.edu.cn/simple"
+default=true
+
+[[tool.uv.index]]
+name = "ustc-mirro"
+url="https://pypi.mirrors.ustc.edu.cn/simple/"
+
+
+[[tool.uv.index]]
+name = "aliyun-mirro"
+url="http://mirrors.aliyun.com/pypi/simple/"
