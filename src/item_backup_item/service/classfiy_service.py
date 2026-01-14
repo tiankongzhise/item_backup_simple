@@ -50,21 +50,21 @@ def classify_item(item:PathLike):
     
     if item.is_file():
         if is_file_oversize(item):
-            return {item:{'item_type':'oversize_file','size':item.stat().st_size}}
+            return {item:{'classify_result':'oversize_file','item_type':'file','item_size':item.stat().st_size}}
         elif is_zip_file(item):
-            return {item:{'item_type':'zip_file','size':item.stat().st_size}}
+            return {item:{'classify_result':'zip_file','item_type':'file','item_size':item.stat().st_size}}
         else:
-            return {item:{'item_type':'normal_file','size':item.stat().st_size}}
+            return {item:{'classify_result':'normal_file','item_type':'file','item_size':item.stat().st_size}}
     elif item.is_dir():
         if is_empty_folder(item):
-            return {item:{'item_type':'empty_folder','size':0}}
+            return {item:{'classify_result':'empty_folder','item_type':'folder','item_size':0}}
         all_file_iter = [i for i in item.rglob("*") if i.is_file()]
         if is_folder_overcount(all_file_iter):
-            return {item:{'item_type':'overcount_folder','size':sum([i.stat().st_size for i in all_file_iter])}}
+            return {item:{'classify_result':'overcount_folder','item_type':'folder','item_size':sum([i.stat().st_size for i in all_file_iter])}}
         elif is_folder_oversize(all_file_iter):
-            return {item:{'item_type':'oversize_folder','size':sum([i.stat().st_size for i in all_file_iter])}}
+            return {item:{'classify_result':'oversize_folder','item_type':'folder','item_size':sum([i.stat().st_size for i in all_file_iter])}}
         else:
-            return {item:{'item_type':'normal_folder','size':sum([i.stat().st_size for i in all_file_iter])}}
+            return {item:{'classify_result':'normal_folder','item_type':'folder','item_size':sum([i.stat().st_size for i in all_file_iter])}}
 
 
 def classify_folder(folder:PathLike):

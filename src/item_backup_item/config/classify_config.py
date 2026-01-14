@@ -18,13 +18,13 @@ class ClassifyConfig:
 
 
     # 记录需要处理的源文件夹或者源文件
-    sources_list = [r'']
+    sources_list = [r'D:\测试用例']
 
     # 压缩后的结果保存到此文件夹
-    zipped_folder= r''
+    zipped_folder= r'D:\压缩测试'
 
     # 将压缩后的文件解压到此文件夹与源文件进行比较
-    unzip_folder = r''
+    unzip_folder = r'D:\解压测试'
 
     # 压缩时每次压缩的文件大小阈值，单位字节
     max_byte_size = 1024 * 1024 * 500 # 500M
