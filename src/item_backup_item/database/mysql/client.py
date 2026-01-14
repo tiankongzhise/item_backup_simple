@@ -3,13 +3,14 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 from .models import MysqlBase
 from sqlalchemy import select,update
-
+from ...config import MysqlConfig
 
 
 class MySQLClient:
-    def __init__(self, database:str|None = None,env_file:str|Path|None = None):
+    def __init__(self, database:str|None = None,env_file:str|Path|None = None,db_config:dict|None=None):
         self.database = database
         self.env_file = env_file or 'mysql.env'
+        self.db_config = db_config or {k: v for k, v in MysqlConfig.__dict__ if v is not None}
         self.engine = None
 
     def get_engine(self):
@@ -21,7 +22,7 @@ class MySQLClient:
         user = os.getenv('MYSQL_USER')
         password = os.getenv('MYSQL_PASSWORD')
         database = self.database or os.getenv('MYSQL_DATABASE')
-        self.engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}')
+        self.engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}:{port}/{database}', **self.db_config)
         try:
             self.engine.connect()
         except Exception as e:

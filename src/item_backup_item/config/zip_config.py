@@ -27,3 +27,9 @@ class ZipConfig:
 
     # 将压缩后的文件解压到此文件夹与源文件进行比较
     unzip_folder = r'D:\解压测试'
+
+    # 压缩密码
+    password = "H_x123456789"
+
+    # 压缩级别,0标识不压缩,1-9,数字越大压缩比越高
+    zip_level = 0
