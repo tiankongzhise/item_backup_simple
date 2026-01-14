@@ -13,6 +13,7 @@ dependencies = [
     "pymysql>=1.1.2",
     "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.45",
+    "tqdm>=4.67.1",
 ]
 
 [tool.setuptools]

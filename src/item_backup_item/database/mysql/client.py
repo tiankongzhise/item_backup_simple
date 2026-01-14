@@ -2,7 +2,9 @@ from sqlalchemy import create_engine
 from pathlib import Path
 from sqlalchemy.orm import Session
 from .models import MysqlBase
-from sqlalchemy import select
+from sqlalchemy import select,update
+
+
 
 class MySQLClient:
     def __init__(self, database:str|None = None,env_file:str|Path|None = None):
@@ -71,6 +73,27 @@ class MySQLClient:
         with Session(engine) as session:
             stmt = select(model)
             return session.scalars(stmt).all()
+
+    def update_data(self, model:MysqlBase, data:list[MysqlBase]):
+        engine = self.get_engine()
+        with Session(engine) as session:
+            session.execute(update(model), data)
+            session.commit()
+
+    def create_query_stmt(self, model:MysqlBase, query_params:dict):
+        stmt = select(model)
+        for key, value in query_params.items():
+            if isinstance(value, (list, tuple)):
+                stmt = stmt.where(model.__table__.c[key].in_(value))
+            else:
+                stmt = stmt.where(model.__table__.c[key] == value)
+        return stmt
+
+    def query_data(self, stmt):
+        engine = self.get_engine()
+        with Session(engine) as session:
+            return session.scalars(stmt).all()
+        
 if __name__ == '__main__':
     client = MySQLClient(env_file=r'./mysql.env')
     engine = client.get_engine()
