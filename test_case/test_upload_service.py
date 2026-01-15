@@ -3,7 +3,7 @@ from item_backup_item.service.upload_service import UploadService
 
 def test_upload_service():
     params = {
-        'file_path':r'd:\压缩测试\20260115\解压密码_H_x123456789\normal_folder.zip',
+        'file_path':r'l:\QQDownload\bns_1.63.3865.2_setup_bin.7z.005',
         'remote_path': '/apps/test_upload/',
         'chunk_size': 20*1024*1024,
         'rtype': 1

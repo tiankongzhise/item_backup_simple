@@ -6,7 +6,7 @@ import hashlib
 from pprint import pprint
 from .openapi_client.api import fileupload_api
 from . import openapi_client
-
+from io import BytesIO
 load_dotenv()
 
 
@@ -70,7 +70,7 @@ class UploadService:
             with open(self.file_path, 'rb') as f:  # 二进制模式打开
                 f.seek(offset)  # 移动到指定偏移量
                 data = f.read(self.chunk_size)  # 读取指定大小的数据
-            return data
+            return BytesIO(data)
         except Exception as e:
             print("Exception when open file: %s\n" % e)
             exit(-1)
@@ -78,13 +78,15 @@ class UploadService:
         """
         precreate
         """
+        if not self.file_path.exists():
+            raise FileNotFoundError(f"file_path:{self.file_path} not exists!")
         if not self.file_path.is_file():
-            raise ValueError("file_path is not a file,folder is not supported")
+            raise ValueError(f"file_path:{self.file_path} is not a file,folder is not supported")
         #    Enter a context with an instance of the API client
         with openapi_client.ApiClient() as api_client:
             # Create an instance of the API class
             api_instance = fileupload_api.FileuploadApi(api_client)
-            access_token = os.getenv("ACCESS_TOKEN")  # str |
+            access_token = os.getenv("BAIDU_PAN_ACCESS_TOKEN")  # str |
             path = f"{self.remote_path}{self.file_path.name}"  # str | 对于一般的第三方软件应用，路径以 "/apps/your-app-name/" 开头。对于小度等硬件应用，路径一般 "/来自：小度设备/" 开头。对于定制化配置的硬件应用，根据配置情况进行填写。
             isdir = 0  # int | isdir
             self.size = self.file_path.stat().st_size  # int | size
@@ -112,7 +114,7 @@ class UploadService:
         with openapi_client.ApiClient() as api_client:
             # Create an instance of the API class
             api_instance = fileupload_api.FileuploadApi(api_client)
-            access_token = os.getenv("ACCESS_TOKEN")  # str |
+            access_token = os.getenv("BAIDU_PAN_ACCESS_TOKEN")  # str |
             for partseq in self.block_list:
                 path = f'{self.remote_path}{self.file_path.name}'  # str |
                 uploadid = self.upload_id  # str |
@@ -122,7 +124,7 @@ class UploadService:
                 # and optional values
                 try:
                     api_response = api_instance.pcssuperfile2(
-                        access_token, partseq, path, uploadid, type, file=file)
+                        access_token, str(partseq), path, uploadid, type, file=file)
                     pprint(api_response)
                 except openapi_client.ApiException as e:
                     print("Exception when calling FileuploadApi->pcssuperfile2: %s\n" % e)
@@ -137,7 +139,7 @@ class UploadService:
         with openapi_client.ApiClient() as api_client:
             # Create an instance of the API class
             api_instance = fileupload_api.FileuploadApi(api_client)
-            access_token = os.getenv("ACCESS_TOKEN")  # str |
+            access_token = os.getenv("BAIDU_PAN_ACCESS_TOKEN")  # str |
             path = f"{self.remote_path}{self.file_path.name}"  # str | 与precreate的path值保持一致
             isdir = 0  # int | isdir
             size = self.size # int | 与precreate的size值保持一致
