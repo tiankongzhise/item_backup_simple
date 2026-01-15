@@ -6,6 +6,6 @@ from dowhen import when
 if __name__ == '__main__':
     db_client = MySQLClient()
     db_client.drop_schema()
-    with when(zip_hash,"return hash_result").do("print(f'\\nhash_result:{hash_result}\\n')"):
-        main()
+
+    main()
     print("All processes completed.")

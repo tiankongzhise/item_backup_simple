@@ -2,12 +2,15 @@ from .control import classify_process
 from .control import hash_process
 from .control import zip_process
 from .control import zip_hash_process
+from .control import unzip_process
 
 def main():
     result = classify_process()
     result = hash_process()
     result = zip_process()
     result = zip_hash_process()
+    result = unzip_process()
+    
     print(result)
 
 

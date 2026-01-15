@@ -1,5 +1,5 @@
 from ..database import MySQLClient as Client
-from ..database import ItemProcessRecord as ZipProcessTable
+from ..database import ItemProcessRecord as UnzipProcessTable
 from ..service import ZipService, get_email_notifier
 from ..config import ZipConfig
 from pydantic import BaseModel, Field,field_validator
@@ -26,13 +26,13 @@ def _create_zip_item_info(db_data):
     return result
 
 
-def _fetch_need_zip_records(client: Client, table: ZipProcessTable):
+def _fetch_need_zip_records(client: Client, table: UnzipProcessTable):
     query_params = {
         "host_name": get_host_name(),
         "classify_result": ["normal_file", "normal_folder"],
         "process_status": "hashed",
     }
-    stmt = client.create_query_stmt(ZipProcessTable, query_params)
+    stmt = client.create_query_stmt(UnzipProcessTable, query_params)
     result = client.query_data(stmt)
     return result
 
@@ -76,7 +76,7 @@ class _ZipResultCheck(BaseModel):
 
 
 def _update_zip_info(
-    client: Client, table: ZipProcessTable, item_id: int, zip_result: Path
+    client: Client, table: UnzipProcessTable, item_id: int, zip_result: Path
 ):
     checked_zip_result = _ZipResultCheck(
         id=item_id,
@@ -84,7 +84,7 @@ def _update_zip_info(
         zipped_size=zip_result.stat().st_size,
     )
     try:
-        client.update_data(ZipProcessTable, [checked_zip_result.model_dump()])
+        client.update_data(UnzipProcessTable, [checked_zip_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {
@@ -107,7 +107,7 @@ def _send_error_notification(error_message):
 def zip_process():
     client = Client()
 
-    need_zip_records = _fetch_need_zip_records(client, ZipProcessTable)
+    need_zip_records = _fetch_need_zip_records(client, UnzipProcessTable)
 
     need_zip_info = _create_zip_item_info(need_zip_records)
 
@@ -122,7 +122,7 @@ def zip_process():
 
 
         update_result = _update_zip_info(
-            client, ZipProcessTable, item_id, zip_result['zipped_path']
+            client, UnzipProcessTable, item_id, zip_result['zipped_path']
         )
         if update_result["result"] == "failure":
             error_message.append(update_result["error_message"])
