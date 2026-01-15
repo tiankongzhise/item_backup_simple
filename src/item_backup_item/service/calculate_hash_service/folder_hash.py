@@ -30,7 +30,7 @@ def _is_oversize(folder_info: list[Path]|dict) -> bool:
             return folder_info['classify_result'] == 'oversize'
         case _:
             raise TypeError("folder_info must be Path, list or dict")
-def _verify_folder_for_hashing(folder_info: Path|dict) -> list:
+def _verify_folder_for_hashing(folder_info: Path|dict|str) -> list:
     '''
     校验文件夹是否符合 hashing 条件
     如果不合规则， raise ValueError，否则返回经过排序的待 hashing 的文件列表
@@ -46,6 +46,8 @@ def _verify_folder_for_hashing(folder_info: Path|dict) -> list:
                 raise ValueError("folder_info is overcount")
             if _is_oversize(folder_info):
                 raise ValueError("folder_info is oversize")
+            folder_path = Path(folder_info['source_path'])
+            file_list = [item for item in folder_path.rglob("*") if item.is_file()]
         case _:
             file_path = Path(folder_info)
             if _is_empty_folder(file_path):
@@ -55,9 +57,6 @@ def _verify_folder_for_hashing(folder_info: Path|dict) -> list:
                 raise ValueError("folder_info is overcount")
             if _is_oversize(file_list):
                 raise ValueError("folder_info is oversize")
-    if not file_list:
-        folder_path = Path(folder_info['source_path'])
-        file_list = [item for item in folder_path.rglob("*") if item.is_file()]
     sorted_file_list = sorted(file_list)
     return sorted_file_list
 
@@ -74,7 +73,7 @@ def _not_display_hash_progress(file_list: list, alg:str):
     hash_result = hash_obj.hexdigest().upper()
     return hash_result
 
-def calculate_folder_hash(folder_info: str|Path|dict, algorithm: list|None = None,display_hash_progress: bool = True) -> str:
+def calculate_folder_hash(folder_info: str|Path|dict, algorithm: list|None = None,display_hash_progress: bool = True) -> dict:
     file_list = _verify_folder_for_hashing(folder_info)
     algorithm = algorithm or HashConfig.required_hash_algorithms
     hash_result = {}
