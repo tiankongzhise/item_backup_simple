@@ -20,8 +20,8 @@ from urllib.request import proxy_bypass_environment
 import urllib3
 import ipaddress
 
-from openapi_client.exceptions import ApiException, UnauthorizedException, ForbiddenException
-from openapi_client.exceptions import NotFoundException, ServiceException, ApiValueError
+from .exceptions import ApiException, UnauthorizedException, ForbiddenException
+from .exceptions import NotFoundException, ServiceException, ApiValueError
 
 
 logger = logging.getLogger(__name__)

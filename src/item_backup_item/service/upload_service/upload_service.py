@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 import hashlib
 from pprint import pprint
-from openapi_client.api import fileupload_api
-import openapi_client
+from .openapi_client.api import fileupload_api
+from . import openapi_client
 
 load_dotenv()
 

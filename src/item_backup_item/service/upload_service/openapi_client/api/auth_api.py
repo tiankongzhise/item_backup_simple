@@ -11,8 +11,8 @@
 import re  # noqa: F401
 import sys  # noqa: F401
 
-from openapi_client.api_client import ApiClient, Endpoint as _Endpoint
-from openapi_client.model_utils import (  # noqa: F401
+from ..api_client import ApiClient, Endpoint as _Endpoint
+from ..model_utils import (  # noqa: F401
     check_allowed_values,
     check_validations,
     date,
@@ -21,10 +21,10 @@ from openapi_client.model_utils import (  # noqa: F401
     none_type,
     validate_and_convert_types
 )
-from openapi_client.model.oauth_token_authorization_code_response import OauthTokenAuthorizationCodeResponse
-from openapi_client.model.oauth_token_device_code_response import OauthTokenDeviceCodeResponse
-from openapi_client.model.oauth_token_device_token_response import OauthTokenDeviceTokenResponse
-from openapi_client.model.oauth_token_refresh_token_response import OauthTokenRefreshTokenResponse
+from ..model.oauth_token_authorization_code_response import OauthTokenAuthorizationCodeResponse
+from ..model.oauth_token_device_code_response import OauthTokenDeviceCodeResponse
+from ..model.oauth_token_device_token_response import OauthTokenDeviceTokenResponse
+from ..model.oauth_token_refresh_token_response import OauthTokenRefreshTokenResponse
 
 
 class AuthApi(object):
