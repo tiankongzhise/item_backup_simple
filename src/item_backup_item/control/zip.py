@@ -1,5 +1,5 @@
 from ..database import MySQLClient as Client
-from ..database import ItemProcessRecord as UnzipProcessTable
+from ..database import ItemProcessRecord as ZipProcessTable
 from ..service import ZipService, get_email_notifier
 from ..config import ZipConfig
 from pydantic import BaseModel,field_validator
@@ -26,7 +26,7 @@ def _create_zip_item_info(db_data):
     return result
 
 
-def _fetch_need_zip_records(client: Client, table: Type[UnzipProcessTable]):
+def _fetch_need_zip_records(client: Client, table: Type[ZipProcessTable]):
     query_params = {
         "host_name": get_host_name(),
         "classify_result": ["normal_file", "normal_folder"],
@@ -76,7 +76,7 @@ class _ZipResultCheck(BaseModel):
 
 
 def _update_zip_info(
-    client: Client, table: Type[UnzipProcessTable], item_id: int, zip_result: Path
+    client: Client, table: Type[ZipProcessTable], item_id: int, zip_result: Path
 ):
     checked_zip_result = _ZipResultCheck(
         id=item_id,
@@ -107,7 +107,7 @@ def _send_error_notification(error_message):
 def zip_process():
     client = Client()
 
-    need_zip_records = _fetch_need_zip_records(client, UnzipProcessTable)
+    need_zip_records = _fetch_need_zip_records(client, ZipProcessTable)
 
     need_zip_info = _create_zip_item_info(need_zip_records)
 
@@ -122,7 +122,7 @@ def zip_process():
 
 
         update_result = _update_zip_info(
-            client, UnzipProcessTable, item_id, zip_result['zipped_path']
+            client, ZipProcessTable, item_id, zip_result['zipped_path']
         )
         if update_result["result"] == "failure":
             error_message.append(update_result["error_message"])

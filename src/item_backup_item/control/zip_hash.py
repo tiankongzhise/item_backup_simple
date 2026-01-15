@@ -1,5 +1,5 @@
 from ..database import MySQLClient as Client
-from ..database import ItemProcessRecord as UnzipProcessTable
+from ..database import ItemProcessRecord as ZipHashProcessTable
 from ..service import CalculateHashService, get_email_notifier
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -27,7 +27,7 @@ def _create_calculate_info(db_data):
     return result
 
 
-def _fetch_ziped_records(client: Client, table: Type[UnzipProcessTable]):
+def _fetch_ziped_records(client: Client, table: Type[ZipHashProcessTable]):
     from sqlalchemy import select, and_, or_
 
     stmt = (
@@ -35,10 +35,10 @@ def _fetch_ziped_records(client: Client, table: Type[UnzipProcessTable]):
         .where(table.host_name == get_host_name())
         .where(
             or_(
-                UnzipProcessTable.process_status == "zipped",
+                table.process_status == "zipped",
                 and_(
-                    UnzipProcessTable.process_status == "hashed",
-                    UnzipProcessTable.classify_result == "zip_file",
+                    table.process_status == "hashed",
+                    table.classify_result == "zip_file",
                 ),
             )
         )
@@ -74,7 +74,7 @@ class HashResult(BaseModel):
 
 
 def _update_zipped_hash_info(
-    client: Client, table: Type[UnzipProcessTable], item_id: int, hash_result: dict
+    client: Client, table: Type[ZipHashProcessTable], item_id: int, hash_result: dict
 ):
     checked_hash_result = HashResult(
         id=item_id,
@@ -106,7 +106,7 @@ def _send_error_notification(error_message):
 def zip_hash_process():
     client = Client()
 
-    zip_records = _fetch_ziped_records(client, UnzipProcessTable)
+    zip_records = _fetch_ziped_records(client, ZipHashProcessTable)
 
     calculate_info = _create_calculate_info(zip_records)
 
@@ -119,7 +119,7 @@ def zip_hash_process():
     for item_id, item_value in calculate_info.items():
         hash_result = _calculate_hash(item_value)
         update_result = _update_zipped_hash_info(
-            client, UnzipProcessTable, item_id, hash_result
+            client, ZipHashProcessTable, item_id, hash_result
         )
         if update_result["result"] == "failure":
             error_message.append(update_result["error_message"])

@@ -120,7 +120,7 @@ def _update_unzip_info(
 
 def _send_error_notification(error_message):
     email_notifier = get_email_notifier()
-    email_notifier.send_error_notification("Hash Process", error_message)
+    email_notifier.send_error_notification("Unzip Process", error_message)
 
 
 def unzip_process():
