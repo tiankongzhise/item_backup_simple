@@ -2,8 +2,9 @@ from sqlalchemy import create_engine
 from pathlib import Path
 from sqlalchemy.orm import Session
 from .models import MysqlBase
-from sqlalchemy import select,update
+from sqlalchemy import select,update,Table
 from ...config import MysqlConfig
+from typing import Type,cast,Sequence
 
 
 class MySQLClient:
@@ -38,17 +39,19 @@ class MySQLClient:
         MysqlBase.metadata.drop_all(engine)
         MysqlBase.metadata.create_all(engine)
 
-    def create_table(self,model:MysqlBase):
+    def create_table(self,model:Type[MysqlBase]|MysqlBase):
         engine = self.get_engine()
-        MysqlBase.metadata.create_all(engine,tables=[model.__table__])
-    def reset_table(self,model:MysqlBase):
+
+        MysqlBase.metadata.create_all(engine,tables=cast(Sequence[Table],[model.__table__]))
+
+    def reset_table(self,model:Type[MysqlBase]):
         engine = self.get_engine()
-        MysqlBase.metadata.drop_all(engine,tables=[model.__table__])
-        MysqlBase.metadata.create_all(engine,tables=[model.__table__])
+        MysqlBase.metadata.drop_all(engine,tables=cast(Sequence[Table],[model.__table__]))
+        MysqlBase.metadata.create_all(engine,tables=cast(Sequence[Table],[model.__table__]))
     
-    def drop_table(self,model:MysqlBase):
+    def drop_table(self,model:Type[MysqlBase]):
         engine = self.get_engine()
-        MysqlBase.metadata.drop_all(engine,tables=[model.__table__])
+        MysqlBase.metadata.drop_all(engine,tables=cast(Sequence[Table],[model.__table__]))
 
     def drop_schema(self):
         engine = self.get_engine()
@@ -69,13 +72,13 @@ class MySQLClient:
             session.commit()
         return len(data)
 
-    def get_all_data(self, model:MysqlBase):
+    def get_all_data(self, model:Type[MysqlBase]):
         engine = self.get_engine()
         with Session(engine) as session:
             stmt = select(model)
             return session.scalars(stmt).all()
 
-    def update_data(self, model:MysqlBase, data:list[dict]):
+    def update_data(self, model:Type[MysqlBase], data:list[dict]):
         engine = self.get_engine()
         changed_rows = 0
         with Session(engine) as session:
@@ -85,7 +88,7 @@ class MySQLClient:
                 changed_rows += result.rowcount
         return changed_rows
 
-    def create_query_stmt(self, model:MysqlBase, query_params:dict):
+    def create_query_stmt(self, model:Type[MysqlBase], query_params:dict):
         stmt = select(model)
         for key, value in query_params.items():
             if isinstance(value, (list, tuple)):

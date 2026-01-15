@@ -5,7 +5,7 @@ from ..config import ZipConfig
 from pydantic import BaseModel,field_validator
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Type
 
 def get_host_name():
     import os
@@ -26,13 +26,13 @@ def _create_zip_item_info(db_data):
     return result
 
 
-def _fetch_need_zip_records(client: Client, table: UnzipProcessTable):
+def _fetch_need_zip_records(client: Client, table: Type[UnzipProcessTable]):
     query_params = {
         "host_name": get_host_name(),
         "classify_result": ["normal_file", "normal_folder"],
         "process_status": "hashed",
     }
-    stmt = client.create_query_stmt(UnzipProcessTable, query_params)
+    stmt = client.create_query_stmt(table, query_params)
     result = client.query_data(stmt)
     return result
 
@@ -76,7 +76,7 @@ class _ZipResultCheck(BaseModel):
 
 
 def _update_zip_info(
-    client: Client, table: UnzipProcessTable, item_id: int, zip_result: Path
+    client: Client, table: Type[UnzipProcessTable], item_id: int, zip_result: Path
 ):
     checked_zip_result = _ZipResultCheck(
         id=item_id,
@@ -84,7 +84,7 @@ def _update_zip_info(
         zipped_size=zip_result.stat().st_size,
     )
     try:
-        client.update_data(UnzipProcessTable, [checked_zip_result.model_dump()])
+        client.update_data(table, [checked_zip_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {

@@ -2,9 +2,10 @@ from ..database import MySQLClient as Client
 from ..database import ItemProcessRecord as UnzipProcessTable
 from ..service import ZipService, get_email_notifier
 from ..config import ZipConfig
-from pydantic import BaseModel,field_validator
+from pydantic import BaseModel,field_validator,Field
 from datetime import datetime
 from pathlib import Path
+from typing import Type
 from typing import Literal
 
 def get_host_name():
@@ -26,13 +27,13 @@ def _create_unzip_item_info(db_data):
     return result
 
 
-def _fetch_need_unzip_records(client: Client, table: UnzipProcessTable):
+def _fetch_need_unzip_records(client: Client, table: Type[UnzipProcessTable]):
     from sqlalchemy import select
     stmt = (
-        select(UnzipProcessTable)
-        .where(UnzipProcessTable.host_name == get_host_name())
-        .where(UnzipProcessTable.process_status == "zip_file_hashed")
-        .where(UnzipProcessTable.classify_result != "zip_file")
+        select(table)
+        .where(table.host_name == get_host_name())
+        .where(table.process_status == "zip_file_hashed")
+        .where(table.classify_result != "zip_file")
     )
     result = client.query_data(stmt)
     return result
@@ -59,7 +60,7 @@ def _unzip_item(item_id,item_info):
 class _UnzipResultCheck(BaseModel):
     id: int
     unzip_path:str
-    unzip_size:int
+    unzip_size:int = Field(..., gt=0) # unzip size greater than 0
     process_status:Literal['unzipped'] = 'unzipped'
 
     @field_validator('unzip_path')
@@ -71,15 +72,17 @@ class _UnzipResultCheck(BaseModel):
         return value
 
 
-def _calculate_unzip_item_size(unzip_result: Path):
+def _calculate_unzip_item_size(unzip_result: Path)->int:
     if not unzip_result.exists():
         raise ValueError(f"Unzip path does not exist: {unzip_result}")
     if unzip_result.is_file():
         return unzip_result.stat().st_size
-    if unzip_result.is_dir():
+    elif unzip_result.is_dir():
         return sum([i.stat().st_size for i in unzip_result.rglob("*") if i.is_file()])
+    else:
+        raise ValueError(f"Unzip path is not a file or directory: {unzip_result}")
 def _update_unzip_info(
-    client: Client, table: UnzipProcessTable, item_id: int, source_item_size: int, unzip_result: Path
+    client: Client, table: Type[UnzipProcessTable], item_id: int, source_item_size: int, unzip_result: Path
 ):
     checked_zip_result = _UnzipResultCheck(
         id=item_id,
@@ -100,7 +103,7 @@ def _update_unzip_info(
         }
 
     try:
-        client.update_data(UnzipProcessTable, [checked_zip_result.model_dump()])
+        client.update_data(table, [checked_zip_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {

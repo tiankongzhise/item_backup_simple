@@ -3,6 +3,7 @@ from ..database import ItemProcessRecord as UnzipProcessTable
 from ..service import CalculateHashService, get_email_notifier
 from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Type
 
 
 def get_host_name():
@@ -26,12 +27,12 @@ def _create_calculate_info(db_data):
     return result
 
 
-def _fetch_ziped_records(client: Client, table: UnzipProcessTable):
+def _fetch_ziped_records(client: Client, table: Type[UnzipProcessTable]):
     from sqlalchemy import select, and_, or_
 
     stmt = (
-        select(UnzipProcessTable)
-        .where(UnzipProcessTable.host_name == get_host_name())
+        select(table)
+        .where(table.host_name == get_host_name())
         .where(
             or_(
                 UnzipProcessTable.process_status == "zipped",
@@ -73,7 +74,7 @@ class HashResult(BaseModel):
 
 
 def _update_zipped_hash_info(
-    client: Client, table: UnzipProcessTable, item_id: int, hash_result: dict
+    client: Client, table: Type[UnzipProcessTable], item_id: int, hash_result: dict
 ):
     checked_hash_result = HashResult(
         id=item_id,
@@ -82,7 +83,7 @@ def _update_zipped_hash_info(
         zipped_sha256=hash_result["sha256"],
     )
     try:
-        client.update_data(UnzipProcessTable, [checked_hash_result.model_dump()])
+        client.update_data(table, [checked_hash_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {

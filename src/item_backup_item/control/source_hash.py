@@ -3,7 +3,7 @@ from ..database import ItemProcessRecord as UnzipProcessTable
 from ..service import CalculateHashService, get_email_notifier
 from pydantic import BaseModel, Field
 from datetime import datetime
-
+from typing import Type
 
 def get_host_name():
     import os
@@ -24,13 +24,13 @@ def _create_calculate_info(db_data):
     return result
 
 
-def _fetch_unhashed_records(client: Client, table: UnzipProcessTable):
+def _fetch_unhashed_records(client: Client, table: Type[UnzipProcessTable]):
     query_params = {
         "host_name": get_host_name(),
         "classify_result": ["normal_file", "normal_folder", "zip_file"],
         "process_status": "classify",
     }
-    stmt = client.create_query_stmt(UnzipProcessTable, query_params)
+    stmt = client.create_query_stmt(table, query_params)
     result = client.query_data(stmt)
     return result
 
@@ -58,7 +58,7 @@ class HashResult(BaseModel):
 
 
 def _update_hash_info(
-    client: Client, table: UnzipProcessTable, item_id: int, hash_result: dict
+    client: Client, table: Type[UnzipProcessTable], item_id: int, hash_result: dict
 ):
     checked_hash_result = HashResult(
         id=item_id,
@@ -67,7 +67,7 @@ def _update_hash_info(
         sha256=hash_result["sha256"],
     )
     try:
-        client.update_data(UnzipProcessTable, [checked_hash_result.model_dump()])
+        client.update_data(table, [checked_hash_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {
