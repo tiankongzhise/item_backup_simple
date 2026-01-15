@@ -11,7 +11,7 @@ load_dotenv()
 
 
 class UploadService:
-    def __init__(self, file_path:str|Path, remote_path:str="/apps/test_upload/",chunk_size: int = 20*1024*1024, rtype: int = 1):
+    def __init__(self, file_path:str|Path, remote_path:str="/apps/test_upload/",chunk_size: int = 20*1024*1024, rtype: int = 1,env_path:str|Path ='upload.env'):
         self.file_path = Path(file_path)
         self.remote_path = self._create_remote_path(remote_path)
         self.chunk_size = chunk_size
@@ -20,7 +20,13 @@ class UploadService:
         self.block_list_jsonstr = None # type: ignore
         self.block_list:list = None # type: ignore
         self.upload_id:str = None # type: ignore
+        self.load_env(env_path)
+        
 
+    def load_env(self,env_path:str|Path ='upload.env'):
+        if not Path(env_path).exists():
+            raise FileNotFoundError(f"env file:{env_path} not found,can not access")
+        load_dotenv(env_path)
 
     def _create_remote_path(self,remote_path:str):
         temp = remote_path if remote_path.endswith("/") else f"{remote_path}/"
