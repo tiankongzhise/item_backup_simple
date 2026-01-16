@@ -29,8 +29,8 @@ class ErrorEmailNotifier:
         if not error_data:
             return "<p>无错误数据</p>"
         
-        # 从第一个字典获取表头
-        headers = list(error_data[0].keys())
+        # # 从第一个字典获取表头
+        # headers = list(error_data[0].keys())
         
         # 使用Pandas生成HTML表格[6](@ref)
         df = pd.DataFrame(error_data)
@@ -134,7 +134,7 @@ class ErrorEmailNotifier:
                 # 尝试关闭连接（如果存在）
                 try:
                     server.quit()
-                except:
+                except Exception as e:
                     pass
                 return False
             
@@ -150,26 +150,24 @@ def get_email_notifier():
     from dotenv import load_dotenv
     load_dotenv('163_email.env')
 
-    print(f'os_info:{
-        os.getenv('SMTP_SERVER'),
-        os.getenv('SMTP_PORT'),
-        os.getenv('SENDER_EMAIL'),
-        os.getenv('SENDER_PASSWORD'),
-        os.getenv('ADMIN_EMAILS')
-    }')
-    
     # 添加环境变量验证
     required_envs = ['SMTP_SERVER', 'SMTP_PORT', 'SENDER_EMAIL', 'SENDER_PASSWORD', 'ADMIN_EMAILS']
+    smtp_server = os.getenv('SMTP_SERVER', 'smtp.163.com')
+    smtp_port = os.getenv('SMTP_PORT', 465)
+    sender_email = os.getenv('SENDER_EMAIL', 'your_email@163.com')
+    sender_password = os.getenv('SENDER_PASSWORD', 'your_password')
+    admin_emails = os.getenv('ADMIN_EMAILS', 'admin_email@example.com').split(',')
+
     for env in required_envs:
         if not os.getenv(env):
             raise ValueError(f"必需的环境变量 {env} 未设置")
     
     return ErrorEmailNotifier(
-        smtp_server=os.getenv('SMTP_SERVER'),
-        port=int(os.getenv('SMTP_PORT')),
-        sender_email=os.getenv('SENDER_EMAIL'),
-        sender_password=os.getenv('SENDER_PASSWORD'),
-        admin_emails=os.getenv('ADMIN_EMAILS').split(',')
+        smtp_server=smtp_server,
+        port=int(smtp_port),
+        sender_email=sender_email,
+        sender_password=sender_password,
+        admin_emails=admin_emails
     )
 
 

@@ -1,9 +1,9 @@
 from ..database import MySQLClient as Client
-from ..database import ItemProcessRecord as ZipProcessTable
+from ..database import ItemProcessRecord as HashProcessTable
 from ..service import CalculateHashService, get_email_notifier
 from pydantic import BaseModel, Field
 from datetime import datetime
-
+from typing import Type
 
 def get_host_name():
     import os
@@ -24,13 +24,13 @@ def _create_calculate_info(db_data):
     return result
 
 
-def _fetch_unhashed_records(client: Client, table: ZipProcessTable):
+def _fetch_unhashed_records(client: Client, table: Type[HashProcessTable]):
     query_params = {
         "host_name": get_host_name(),
         "classify_result": ["normal_file", "normal_folder", "zip_file"],
         "process_status": "classify",
     }
-    stmt = client.create_query_stmt(ZipProcessTable, query_params)
+    stmt = client.create_query_stmt(table, query_params)
     result = client.query_data(stmt)
     return result
 
@@ -58,7 +58,7 @@ class HashResult(BaseModel):
 
 
 def _update_hash_info(
-    client: Client, table: ZipProcessTable, item_id: int, hash_result: dict
+    client: Client, table: Type[HashProcessTable], item_id: int, hash_result: dict
 ):
     checked_hash_result = HashResult(
         id=item_id,
@@ -67,7 +67,7 @@ def _update_hash_info(
         sha256=hash_result["sha256"],
     )
     try:
-        client.update_data(ZipProcessTable, [checked_hash_result.model_dump()])
+        client.update_data(table, [checked_hash_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {
@@ -90,7 +90,7 @@ def _send_error_notification(error_message):
 def hash_process():
     client = Client()
 
-    unhashed_records = _fetch_unhashed_records(client, ZipProcessTable)
+    unhashed_records = _fetch_unhashed_records(client, HashProcessTable)
 
     calculate_info = _create_calculate_info(unhashed_records)
 
@@ -99,7 +99,7 @@ def hash_process():
     for item_id, item_value in calculate_info.items():
         hash_result = calculate_hash(item_value)
         update_result = _update_hash_info(
-            client, ZipProcessTable, item_id, hash_result
+            client, HashProcessTable, item_id, hash_result
         )
         if update_result["result"] == "failure":
             error_message.append(update_result["error_message"])

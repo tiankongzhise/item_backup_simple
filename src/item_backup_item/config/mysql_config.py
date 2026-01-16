@@ -2,4 +2,10 @@ from dataclasses import dataclass
 
 @dataclass
 class MysqlConfig:
-    pool_pre_ping: bool = True
+    engine_config={
+        "pool_pre_ping": True,
+        "pool_size": 10,
+        "max_overflow": 20,
+        "pool_recycle": 3600,
+        "pool_timeout": 30,
+    }

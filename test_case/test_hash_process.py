@@ -1,4 +1,4 @@
-from item_backup_item.control.hash import hash_process
+from item_backup_item.control.source_hash import hash_process
 
 
 def test_hash_process():

@@ -67,7 +67,7 @@ def classify_item(item:PathLike):
             return {item:{'classify_result':'normal_folder','item_type':'folder','item_size':sum([i.stat().st_size for i in all_file_iter])}}
 
 
-def classify_folder(folder:PathLike):
+def classify_folder(folder:PathLike|str|pathlib.Path):
     '''
     对文件夹进行分类,仅对第一层进行分类，不递归分类
     @param folder: 文件夹路径, str or pathlib.Path

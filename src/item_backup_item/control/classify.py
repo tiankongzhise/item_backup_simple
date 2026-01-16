@@ -1,9 +1,9 @@
 from ..config import ClassifyConfig
 from ..service import classify_folder
 from ..service import StorageService
-from typing import Optional
+from typing import Optional, Type
 
-def classify_process(config: Optional[ClassifyConfig] = None):
+def classify_process(config: Optional[Type[ClassifyConfig]] = None):
     if config is None:
         config = ClassifyConfig
     target_folder_list = config.sources_list
