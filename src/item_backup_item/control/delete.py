@@ -47,20 +47,29 @@ def _del_unzipped_file(file_path):
     if file_path:
         unzipped_path = Path(file_path)
         if unzipped_path.exists():
-            shutil.rmtree(unzipped_path)
+            if unzipped_path.is_dir():
+                shutil.rmtree(unzipped_path)
+            else:
+                unzipped_path.unlink()
 def _zip_file(file_path):
     import shutil
     if file_path:
         zipped_path = Path(file_path)
         if zipped_path.exists():
-            shutil.rmtree(zipped_path)
+            if zipped_path.is_dir():
+                shutil.rmtree(zipped_path)
+            else:
+                zipped_path.unlink()
 
 def _source_file(file_path):
     import shutil
     if file_path:
         source_path = Path(file_path)
         if source_path.exists():
-            shutil.rmtree(source_path)
+            if source_path.is_dir():
+                shutil.rmtree(source_path)
+            else:
+                source_path.unlink()
 
 def _delete_file(file_path):
     try:
