@@ -1,0 +1,26 @@
+'''
+约定了各控制类的返回结果。确保流程稳定性和可处理性。
+'''
+
+from pydantic import BaseModel
+
+class ClassifyItemResult(BaseModel):
+    ...
+
+class SourceItemHashedResult(BaseModel):
+    ...
+
+class ZipItemResult(BaseModel):
+    ...
+
+class ZipItemHashedResult(BaseModel):
+    ...
+
+class UnzipItemResult(BaseModel):
+    ...
+class UnzipItemHashedResult(BaseModel):
+    ...
+class UploadItemResult(BaseModel):
+    ...
+class DeleteItemResult(BaseModel):
+    ...
