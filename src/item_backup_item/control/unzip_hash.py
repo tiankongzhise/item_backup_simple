@@ -5,9 +5,8 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Type
 from copy import deepcopy
-from ..utils.state_machine import get_state_machine
-unzip_hash_machine = get_state_machine()
-unzip_hash_machine.set_state(unzip_hash_machine.get_state_by_index(6))
+
+
 
 
 def get_host_name():
@@ -106,6 +105,9 @@ def _send_error_notification(error_message):
     email_notifier.send_error_notification("Unzip Hash Process", error_message)
 
 def _pre_source_zip_file_process(client: Client, table: Type[UnzipHashProcessTable]):
+    from ..utils.state_machine import get_state_machine
+    unzip_hash_machine = get_state_machine()
+    unzip_hash_machine.set_state(unzip_hash_machine.get_state_by_index(6))
     params = {
         "host_name": get_host_name(),
         "process_status": unzip_hash_machine.get_previous_state(),

@@ -2,7 +2,7 @@ from ..database import MySQLClient as Client
 from ..database import ItemProcessRecord as UnzipProcessTable
 from ..service import ZipService, get_email_notifier
 from ..config import ZipConfig
-from ..utils.state_machine import get_state_machine
+
 
 from pydantic import BaseModel,field_validator,Field
 from datetime import datetime

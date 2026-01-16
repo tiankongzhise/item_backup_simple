@@ -1,9 +1,9 @@
 from ..database import MySQLClient as Client
-from ..database import ItemProcessRecord as UnzipHashProcessTable
-from ..service import CalculateHashService, get_email_notifier
-from pydantic import BaseModel, Field
+from ..database import ItemProcessRecord as UploadProcessTable
+from ..service import UploadService, get_email_notifier
+from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
-from typing import Type
+from typing import Type,Literal
 from copy import deepcopy
 
 def get_host_name():
@@ -12,86 +12,75 @@ def get_host_name():
     return os.getenv("COMPUTERNAME")
 
 
-def _create_calculate_info(db_data):
+def _create_upload_info(db_data):
     result = {}
     for item in db_data:
-        result[item.id] = {
-            'file'
-        }
+        result[item.id] = item.zipped_path
     return result
 
 
-def _need_upload_records(client: Client, table: Type[UnzipHashProcessTable]):
-    from sqlalchemy import select , and_,or_
-    stmt = (
-        select(table)
-        .where(
-            or_(
-                and_(
-                    table.process_status == "zip_file_hashed",
-                    table.classify_result == "zip_file",
-                    ),
-                table.process_status == "unzip_hashed",
-            )
-        )
-    )
+def _need_upload_records(client: Client, table: Type[UploadProcessTable]):
+    params = {
+        "host_name": get_host_name(),
+        "process_status": "unzip_hashed",
+    }
+    stmt = client.create_query_stmt(table, params)
     result = client.query_data(stmt)
     return result
 
 
-def _calculate_hash(item_info):
-    hash_service = CalculateHashService()
-    if item_info["file_type"] == "file":
-        return hash_service.calculate_file_hash(item_info["info"])
+def _upload_file(file_path):
+    upload_service = UploadService()
+    upload_result = upload_service.upload_file(file_path)
+    if upload_result["errno"] == 0:
+        return {"result": "success", "error_message": ""}
     else:
-        return hash_service.calculate_folder_hash(item_info["info"])
+        return {
+            "result": "failure",
+            "error_message": str(upload_result)
+        }
 
 
-class UnzipHashResult(BaseModel):
+class UploadResult(BaseModel):
     id: int
-    unzip_md5: str = Field(
-        ..., max_length=32, min_length=32, description="MD5 hash of the file"
-    )
-    unzip_sha1: str = Field(
-        ..., max_length=40, min_length=40, description="SHA1 hash of the file"
-    )
-    unzip_sha256: str = Field(
-        ..., max_length=64, min_length=64, description="SHA256 hash of the file"
-    )
-    process_status: str = "unzip_hashed"
+    fail_reason: str|None = None
+    process_status: str = "upload"
+    status_result :Literal["success","failure"]
+
+    @model_validator(mode="after")
+    def check_fail_reason(self):
+        if self.status_result == "success" and self.fail_reason is not None:
+            raise ValueError("fail_reason must be None when status_result is success")
+        if self.status_result == "failure" and self.fail_reason is None:
+            raise ValueError("fail_reason must be set when status_result is failure")
+        return self
 
 
-def _update_unzip_hash_info(
-    client: Client, table: Type[UnzipHashProcessTable], source_item_info:dict, hash_result: dict
-):
-    checked_hash_result = UnzipHashResult(
-        id=source_item_info["id"],
-        unzip_md5=hash_result["md5"],
-        unzip_sha1=hash_result["sha1"],
-        unzip_sha256=hash_result["sha256"],
-    )
-    if not (source_item_info['md5'] == checked_hash_result.unzip_md5 and
-            source_item_info['sha1'] == checked_hash_result.unzip_sha1 and
-            source_item_info['sha256'] == checked_hash_result.unzip_sha256):
-            return {"result": "failure", "error_message": {
-                "错误类型": "解压文件与源文件hash不一致",
-                "数据库模型": "UnzipHashProcessTable",
-                "记录ID": source_item_info["id"],
-                "错误时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "错误信息": f"数据库记录的哈希值与计算的哈希值不匹配，源hash记录为:md5:{source_item_info['md5']} sha1:{source_item_info['sha1']} sha256:{source_item_info['sha256']},解压 hash结果为:md5:{checked_hash_result.unzip_md5} sha1:{checked_hash_result.unzip_sha1} sha256:{checked_hash_result.unzip_sha256}",
-            }}
 
+def _update_upload_info(
+    client: Client, table: Type[UploadProcessTable], item_id: int, upload_result: dict):
+    if upload_result["result"] == "success":
+        checked_upload_result = UploadResult(
+            id=item_id,
+            status_result="success"
+        )
+    else:
+        checked_upload_result = UploadResult(
+            id=item_id,
+            fail_reason=upload_result["error_message"],
+            status_result="failure"
+        )
 
     try:
-        client.update_data(table, [checked_hash_result.model_dump()])
+        client.update_data(table, [checked_upload_result.model_dump()])
         return {"result": "success", "error_message": ""}
     except Exception as e:
         return {
             "result": "failure",
             "error_message": {
                 "错误类型": "数据库更新失败",
-                "数据库模型": "UnzipHashProcessTable",
-                "记录ID": source_item_info["id"],
+                "数据库模型": "UploadProcessTable",
+                "记录ID": item_id,
                 "错误时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 "错误信息": str(e),
             },
@@ -100,32 +89,21 @@ def _update_unzip_hash_info(
 
 def _send_error_notification(error_message):
     email_notifier = get_email_notifier()
-    email_notifier.send_error_notification("Unzip Hash Process", error_message)
+    email_notifier.send_error_notification("Upload Process", error_message)
 
 
 def upload_process():
     client = Client()
 
-    unhashed_records = _need_upload_records(client, UnzipHashProcessTable)
+    need_upload_records = _need_upload_records(client, UploadProcessTable)
 
-    calculate_info = _create_calculate_info(unhashed_records)
+    upload_info = _create_upload_info(need_upload_records)
 
     error_message = []
-
-    for item_id, item_value in calculate_info.items():
-        temp_item_info = deepcopy(item_value)
-        md5 = temp_item_info.pop("md5")
-        sha1 = temp_item_info.pop("sha1")
-        sha256 = temp_item_info.pop("sha256")
-        source_item_info ={
-            "id": item_id,
-            "md5": md5,
-            "sha1": sha1,
-            "sha256": sha256,
-        }
-        hash_result = _calculate_hash(temp_item_info)
-        update_result = _update_unzip_hash_info(
-            client, UnzipHashProcessTable, source_item_info, hash_result
+    for item_id, path in upload_info.items():
+        upload_result = _upload_file(path)
+        update_result = _update_upload_info(
+            client, UploadProcessTable, item_id, upload_result
         )
         if update_result["result"] == "failure":
             error_message.append(update_result["error_message"])

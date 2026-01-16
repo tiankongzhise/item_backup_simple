@@ -33,9 +33,10 @@ class UploadService:
     def _set_remote_path(self):
         temp_path = '/item_backup/'
         date, password = extract_date_and_password_from_path(self.file_path.absolute().as_posix())
-        date = date or datetime.now().strftime("%Y%m%d")
+        date = date or datetime.now().strftime("%Y%m%d") 
         if not password:
-            raise ValueError("upload info Password is missing, please check your file path")
+            print(f"upload info Password is missing, please check your file path:{self.file_path},use unknown instead")
+        password = password or "unknown"
         temp_path = f"{temp_path}{date}/{password}/{self.file_path.name}"
         self.remote_path = temp_path
 
@@ -231,7 +232,9 @@ class UploadService:
     def __del__(self):
         import shutil
         if self.temp_dir:
-            shutil.rmtree(self.temp_dir)
+            temp_dir = Path(self.temp_dir)
+            if temp_dir.exists():
+                shutil.rmtree(temp_dir)
 
 
 

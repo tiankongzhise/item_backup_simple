@@ -4,10 +4,11 @@ from ...config import HashConfig,ClassifyConfig
 
 def _is_oversize(file_info: str|Path|dict) -> bool:
     match file_info:
-        case Path():
-            return file_info.stat().st_size > ClassifyConfig.file_oversize
         case dict():
             return file_info['classify_result'] == 'oversize_file'
+        case _:
+            file_info = Path(file_info)
+            return file_info.stat().st_size > ClassifyConfig.file_oversize
 
 def _is_file(file_info: str|Path|dict) -> bool:
     match file_info:

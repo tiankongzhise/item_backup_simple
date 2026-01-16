@@ -4,6 +4,7 @@ from .zip import zip_process
 from .zip_hash import zip_hash_process
 from .unzip import unzip_process
 from .unzip_hash import unzip_hash_process
+from .upload import upload_process
 
 __all__ = [
     "classify_process",
@@ -12,4 +13,5 @@ __all__ = [
     "zip_hash_process",
     "unzip_process",
     "unzip_hash_process",   
+    "upload_process",
 ]
