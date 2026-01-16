@@ -1,6 +1,6 @@
 from ..config import ClassifyConfig
-from ..service import classify_folder
-from ..service import StorageService
+from ..core import classify_folder
+from ..core import StorageService
 from typing import Optional, Type
 
 def classify_process(config: Optional[Type[ClassifyConfig]] = None):

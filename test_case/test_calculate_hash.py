@@ -1,4 +1,4 @@
-from item_backup_item.service.calculate_hash_service import CalculateHashService
+from item_backup_item.core.hash_core import CalculateHashService
 
 
 def test_oversize_file(path):

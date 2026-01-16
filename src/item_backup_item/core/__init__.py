@@ -1,7 +1,7 @@
-from .classfiy_service import classify_folder
+from .classfiy_core import classify_folder
 from .storage_service import StorageService
-from .calculate_hash_service import CalculateHashService
-from .zip_service import ZipService
+from .hash_core import CalculateHashService
+from .zip_core import ZipService
 from .email_service import get_email_notifier
 from .upload_service import UploadService
 __all__ = [

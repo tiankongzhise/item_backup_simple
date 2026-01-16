@@ -1,6 +1,6 @@
 from ..database import MySQLClient as Client
 from ..database import ItemProcessRecord as UnzipHashProcessTable
-from ..service import CalculateHashService, get_email_notifier
+from ..core import CalculateHashService, get_email_notifier
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Type

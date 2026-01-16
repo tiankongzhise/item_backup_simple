@@ -1,4 +1,4 @@
-from item_backup_item.service.zip_service import ZipService
+from item_backup_item.core.zip_core import ZipService
 
 
 def test_zip_service(path,target_dir,password,compress_type):

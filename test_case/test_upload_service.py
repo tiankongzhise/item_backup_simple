@@ -1,4 +1,4 @@
-from item_backup_item.service.upload_service import UploadService
+from item_backup_item.core.upload_service import UploadService
 
 
 
