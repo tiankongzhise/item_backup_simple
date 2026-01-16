@@ -1,6 +1,6 @@
 from dowhen import when
 import pyzipper
-from os import PathLike
+from pathlib import Path
 import pathlib
 import datetime
 from ..config import ZipConfig
@@ -40,20 +40,29 @@ def _add_directory_to_zip(zipf: pyzipper.ZipFile, directory_path: pathlib.Path) 
 class ZipService:
     """ZIP压缩和解压服务"""
     @staticmethod
-    def zip_item(source_item:PathLike,target_dir:PathLike,password:str|None=None,compress_level:int=6):
+    def zip_item(source_item:str|Path,target_file:str|Path,password:str|None=None,compress_level:int=6):
+        '''
+        将文件或者文件夹压缩成zip文件。使用固定的salt。生成的zip，hash值稳定。
+        params:
+            source_item: 源文件路径
+            target_file: 目标zip文件路径，需要包含完整的压缩文件名称。只负责压缩工作。
+            password: 压缩密码，如果为空则不加密
+            compress_level: 压缩级别，0-9，数字越大压缩比越高
+        return: 
+            Path 压缩文件路径
+        '''
         source_item = pathlib.Path(source_item)
-        target_dir = pathlib.Path(target_dir)
+        target_file = pathlib.Path(target_file)
         if not source_item.exists():
             raise FileNotFoundError(f"source_item {source_item} not exists")
-        if target_dir.is_file():
-            raise IsADirectoryError(f"target_dir {target_dir} is a file,shoud be a folder")
+        if target_file.is_dir():
+            raise IsADirectoryError(f"target_file {target_file} is a folder,shoud be a file")
+        elif target_file.suffix != '.zip':
+            raise ValueError(f"target_file {target_file} should be a zip file")
+
         if not isinstance(compress_level,int):
             raise TypeError(f"compress_level {compress_level} should be int")
-        
-        if password:
-            ziped_item = target_dir / datetime.datetime.now().strftime("%Y%m%d") / f'解压密码_{password}' / f'{source_item.name}.zip'
-        else:
-            ziped_item = target_dir / datetime.datetime.now().strftime("%Y%m%d") / f'{source_item.name}.zip'
+        ziped_item = target_file
         ziped_item.parent.mkdir(parents=True, exist_ok=True)
         
         compress_level = max(0, min(9, compress_level))
@@ -83,13 +92,13 @@ class ZipService:
                     ziped_item.unlink()
                 raise e
     @staticmethod
-    def unzip_item(zip_path: PathLike, target_dir: PathLike = None, password: str | None = None) -> pathlib.Path:
+    def unzip_item(zip_path: str | Path, target_dir: str | Path |None= None, password: str | None = None) -> pathlib.Path:
         """
         解压ZIP文件到目标目录
 
         Args:
             zip_path: ZIP文件路径
-            target_dir: 目标目录，默认为 ClassifyConfig.unzip_folder
+            target_dir: 目标目录，当为空时默认为 ZipConfig.unzip_folder
             password: 解压密码（可选）
 
         Returns:
