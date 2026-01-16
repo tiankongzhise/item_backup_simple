@@ -5,10 +5,6 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Type
 from copy import deepcopy
-from ..utils.state_machine import get_state_machine
-unzip_hash_machine = get_state_machine()
-unzip_hash_machine.set_state(unzip_hash_machine.get_state_by_index(6))
-
 
 def get_host_name():
     import os
@@ -20,23 +16,24 @@ def _create_calculate_info(db_data):
     result = {}
     for item in db_data:
         result[item.id] = {
-            "file_type": item.item_type,
-            "info": item.unzip_path,
-            "md5": item.md5,
-            "sha1": item.sha1,
-            "sha256": item.sha256,
-            
+            'file'
         }
     return result
 
 
-def _fetch_unzip_records(client: Client, table: Type[UnzipHashProcessTable]):
-    from sqlalchemy import select
+def _need_upload_records(client: Client, table: Type[UnzipHashProcessTable]):
+    from sqlalchemy import select , and_,or_
     stmt = (
         select(table)
-        .where(table.host_name == get_host_name())
-        .where(table.process_status == "unzipped")
-        .where(table.classify_result != "zip_file")
+        .where(
+            or_(
+                and_(
+                    table.process_status == "zip_file_hashed",
+                    table.classify_result == "zip_file",
+                    ),
+                table.process_status == "unzip_hashed",
+            )
+        )
     )
     result = client.query_data(stmt)
     return result
@@ -105,53 +102,15 @@ def _send_error_notification(error_message):
     email_notifier = get_email_notifier()
     email_notifier.send_error_notification("Unzip Hash Process", error_message)
 
-def _pre_source_zip_file_process(client: Client, table: Type[UnzipHashProcessTable]):
-    params = {
-        "host_name": get_host_name(),
-        "process_status": unzip_hash_machine.get_previous_state(),
-        "classify_result": ["zip_file"],
-    }
-    stmt = client.create_query_stmt(table, params)
-    records = client.query_data(stmt)
-    changed_records = []
-    changed_ids = []
-    for record in records:
-        changed_records.append({
-            'id': record.id,
-            'process_status': unzip_hash_machine.get_current_state(),
-        })
-        changed_ids.append(record.id)
-    try:
-        client.update_data(table, changed_records)
-        return {"result": "success", "error_message": ""}
-    except Exception as e:
-        return {
-            "result": "failure",
-            "error_message": {
-                "错误类型": "数据库更新失败",
-                "数据库模型": "UnzipHashProcessTable",
-                "记录ID": ','.join(map(str, changed_ids)),
-                "错误时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "错误信息": str(e),
-            },
-        }
 
-def _pre_unzip_hash_process(client: Client, table: Type[UnzipHashProcessTable]):
-    return _pre_source_zip_file_process(client, table)
-
-def unzip_hash_process():
+def upload_process():
     client = Client()
 
-    unhashed_records = _fetch_unzip_records(client, UnzipHashProcessTable)
+    unhashed_records = _need_upload_records(client, UnzipHashProcessTable)
 
     calculate_info = _create_calculate_info(unhashed_records)
 
-    pre_unzip_hash_process_result = _pre_unzip_hash_process(client, UnzipHashProcessTable)
-
     error_message = []
-
-    if pre_unzip_hash_process_result["result"] == "failure":
-        error_message.append(pre_unzip_hash_process_result["error_message"])
 
     for item_id, item_value in calculate_info.items():
         temp_item_info = deepcopy(item_value)

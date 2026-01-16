@@ -2,10 +2,14 @@ from ..database import MySQLClient as Client
 from ..database import ItemProcessRecord as ZipProcessTable
 from ..service import ZipService, get_email_notifier
 from ..config import ZipConfig
+from ..utils.state_machine import get_state_machine
 from pydantic import BaseModel,field_validator
 from datetime import datetime
 from pathlib import Path
 from typing import Literal, Type
+
+
+
 
 def get_host_name():
     import os
@@ -103,6 +107,49 @@ def _send_error_notification(error_message):
     email_notifier = get_email_notifier()
     email_notifier.send_error_notification("Hash Process", error_message)
 
+def _process_source_zip_records(client: Client, table: Type[ZipProcessTable]):
+    from ..utils.state_machine import get_state_machine
+    zip_machine = get_state_machine()
+    zip_machine.set_state(zip_machine.get_state_by_index(3))
+
+    query_params = {
+        "host_name": get_host_name(),
+        "classify_result": ["zip_file"],
+        "process_status": zip_machine.get_previous_state(),
+    }
+    stmt = client.create_query_stmt(table, query_params)
+    print('\n')
+    print(f'stmt:{stmt}')
+    print(f'process_status:{ zip_machine.get_previous_state()}')
+    print('\n')
+    records = client.query_data(stmt)
+    changed_records = []
+    id_list = []
+    for record in records:
+        changed_records.append(
+            _ZipResultCheck(id=record.id, zipped_path=record.source_path, zipped_size=record.item_size).model_dump()
+        )
+        id_list.append(record.id)
+    try:
+        client.update_data(table, changed_records)
+        return {"result": "success", "error_message": ""}
+    except Exception as e:
+        return {
+            "result": "failure",
+            "error_message": {
+                "错误类型": "数据库更新失败",
+                "数据库模型": "ZipProcessTable",
+                "记录ID": ','.join(map(str, id_list)),
+                "错误时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "错误信息": str(e),
+            },
+        }
+
+
+def _pre_zip_process(client: Client, table: Type[ZipProcessTable]):
+    result = _process_source_zip_records(client, table)
+    return result
+
 
 def zip_process():
     client = Client()
@@ -110,8 +157,11 @@ def zip_process():
     need_zip_records = _fetch_need_zip_records(client, ZipProcessTable)
 
     need_zip_info = _create_zip_item_info(need_zip_records)
-
+    pre_process_result = _pre_zip_process(client, ZipProcessTable)
     error_message = []
+
+    if pre_process_result["result"] == "failure":
+        error_message.append(pre_process_result["error_message"])
 
     for item_id, item_value in need_zip_info.items():
         zip_result = _zip_item(item_id, item_value)

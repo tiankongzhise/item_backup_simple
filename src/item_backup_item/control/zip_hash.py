@@ -28,19 +28,12 @@ def _create_calculate_info(db_data):
 
 
 def _fetch_ziped_records(client: Client, table: Type[ZipHashProcessTable]):
-    from sqlalchemy import select, and_, or_
-
+    from sqlalchemy import select
     stmt = (
         select(table)
         .where(table.host_name == get_host_name())
         .where(
-            or_(
                 table.process_status == "zipped",
-                and_(
-                    table.process_status == "hashed",
-                    table.classify_result == "zip_file",
-                ),
-            )
         )
     )
 

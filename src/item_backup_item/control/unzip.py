@@ -2,11 +2,16 @@ from ..database import MySQLClient as Client
 from ..database import ItemProcessRecord as UnzipProcessTable
 from ..service import ZipService, get_email_notifier
 from ..config import ZipConfig
+from ..utils.state_machine import get_state_machine
+
 from pydantic import BaseModel,field_validator,Field
 from datetime import datetime
 from pathlib import Path
 from typing import Type
 from typing import Literal
+
+
+
 
 def get_host_name():
     import os
@@ -122,6 +127,45 @@ def _send_error_notification(error_message):
     email_notifier = get_email_notifier()
     email_notifier.send_error_notification("Unzip Process", error_message)
 
+def _process_source_zip_file(client: Client, table: Type[UnzipProcessTable]):
+    from ..utils.state_machine import get_state_machine
+    unzip_machine = get_state_machine()
+    unzip_machine.set_state(unzip_machine.get_state_by_index(5))
+
+
+
+    params = {
+        "host_name": get_host_name(),
+        "process_status": unzip_machine.get_previous_state(),
+        "classify_result": ["zip_file"],
+    }
+    stmt = client.create_query_stmt(table, params)
+    records = client.query_data(stmt)
+    changed_records = []
+    changed_id = []
+    for record in records:
+        changed_records.append({
+            'id': record.id,
+            'process_status': unzip_machine.get_current_state(),
+        })
+        changed_id.append(record.id)
+    try:
+        client.update_data(table, changed_records)
+        return {"result": "success", "error_message": ""}
+    except Exception as e:
+        return {
+            "result": "failure",
+            "error_message": {
+                "错误类型": "数据库更新失败",
+                "数据库模型": "UnzipProcessTable",
+                "记录ID": ','.join(map(str, changed_id)),
+                "错误时间": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "错误信息": str(e),
+            },
+        }
+def _pre_unzip_process(client: Client, table: Type[UnzipProcessTable]):
+    return _process_source_zip_file(client, table)
+
 
 def unzip_process():
     client = Client()
@@ -130,7 +174,10 @@ def unzip_process():
 
     need_zip_info = _create_unzip_item_info(need_zip_records)
 
+    pre_unzip_process_result = _pre_unzip_process(client, UnzipProcessTable)
     error_message = []
+    if pre_unzip_process_result["result"] == "failure":
+        error_message.append(pre_unzip_process_result["error_message"])
 
     for item_id, item_value in need_zip_info.items():
         source_item_size = item_value.pop('source_item_size')
