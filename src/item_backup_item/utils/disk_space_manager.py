@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Optional
 import psutil
 import logging
-
+from ..config import ZipConfig
 
 logger = logging.getLogger(__name__)
 
@@ -27,19 +27,19 @@ class DiskSpaceManager:
         
     def get_available_space_gb(self) -> float:
         """获取可用磁盘空间(GB)"""
-        disk_usage = psutil.disk_usage('.')
+        disk_usage = psutil.disk_usage(ZipConfig.zipped_folder)
         available_bytes = disk_usage.free
         return available_bytes / (1024**3)
     
     def get_total_space_gb(self) -> float:
         """获取总磁盘空间(GB)"""
-        disk_usage = psutil.disk_usage('.')
+        disk_usage = psutil.disk_usage(ZipConfig.zipped_folder)
         total_bytes = disk_usage.total
         return total_bytes / (1024**3)
     
     def get_used_space_gb(self) -> float:
         """获取已用磁盘空间(GB)，包括预留空间"""
-        disk_usage = psutil.disk_usage('.')
+        disk_usage = psutil.disk_usage(ZipConfig.zipped_folder)
         used_bytes = disk_usage.used + self.reserved_space
         return used_bytes / (1024**3)
     

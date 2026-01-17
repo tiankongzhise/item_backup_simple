@@ -8,7 +8,7 @@ from typing import Dict, Optional, List
 from dataclasses import dataclass
 import psutil
 import os
-
+from ..config import ZipConfig
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class ResourceManager:
         memory_percent = memory_info.percent
         
         # 磁盘使用情况
-        disk_usage = psutil.disk_usage('.')
+        disk_usage = psutil.disk_usage(ZipConfig.zipped_folder)
         total_disk_gb = disk_usage.total / (1024**3)
         used_disk_gb = disk_usage.used / (1024**3)
         available_disk_gb = disk_usage.free / (1024**3)
