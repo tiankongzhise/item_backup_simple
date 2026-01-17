@@ -6,6 +6,7 @@ from .unzip import unzip_process
 from .unzip_hash import unzip_hash_process
 from .upload import upload_process
 from .delete import delete_process
+from .single_file_processor import single_file_process
 __all__ = [
     "classify_process",
     "hash_process",
@@ -15,4 +16,5 @@ __all__ = [
     "unzip_hash_process",   
     "upload_process",
     "delete_process",
+    "single_file_process",
 ]

@@ -18,7 +18,7 @@ class ClassifyConfig:
 
 
     # 记录需要处理的源文件夹或者源文件
-    sources_list = [r'D:\测试用例']
+    sources_list = [r'D:\测试文件备份\test_temp\normal_folder']
 
     # 压缩时每次压缩的文件大小阈值，单位字节
     max_byte_size = 1024 * 1024 * 500 # 500M

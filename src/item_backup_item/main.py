@@ -1,22 +1,20 @@
-from .control import classify_process
-from .control import hash_process
-from .control import zip_process
-from .control import zip_hash_process
-from .control import unzip_process
-from .control import unzip_hash_process
-from .control import upload_process
-from .control import delete_process
+from .control import classify_process, single_file_process
+from .config import ProcessingConfig
 
 def main():
+    """主处理函数 - 使用新的单文件处理模式"""
+    config = ProcessingConfig()
+    
+    # 首先执行分类流程，生成待处理文件列表
+    print("开始文件分类...")
     result = classify_process()
-    result = hash_process()
-    result = zip_process()
-    result = zip_hash_process()
-    result = unzip_process()
-    result = unzip_hash_process()
-    result = upload_process()   
-    result = delete_process()
-    print(result)
+    print(f"分类完成，共处理 {result} 个文件")
+    
+    # 启动单文件处理流程
+    print("启动单文件处理流程...")
+    single_file_process()
+    
+    print("所有处理流程完成")
 
 
 

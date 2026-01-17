@@ -23,10 +23,10 @@ class ZipConfig:
     }
 
     # 压缩后的结果保存到此文件夹
-    zipped_folder= r'D:\压缩测试'
+    zipped_folder= r'D:\测试文件备份\压缩测试'
 
     # 将压缩后的文件解压到此文件夹与源文件进行比较
-    unzip_folder = r'D:\解压测试'
+    unzip_folder = r'D:\测试文件备份\解压测试'
 
     # 压缩密码
     password = "H_x123456789"
