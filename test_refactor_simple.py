@@ -3,7 +3,7 @@
 """
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
 
 print("=" * 50)
 print("重构功能测试")

@@ -239,19 +239,28 @@ class DiskSpaceManager:
         Returns:
             SpaceReservation对象，如果失败返回None
         """
+        print(f'debug:reserve_space is run,self.config.enabled：{self.config.enabled}')
         if not self.config.enabled:
             return SpaceReservation(reserved_bytes=bytes, path=path)
 
-        with self._reservation_lock:
-            # 再次检查空间
-            can_process, space_info = self.can_process_file(bytes, path)
+        # 在加锁前先检查空间状态，避免死锁
+        can_process, space_info = self.can_process_file(bytes, path)
 
-            if not can_process or space_info is None:
-                logger.warning(f"Cannot reserve {bytes} bytes for {path}: insufficient space")
+        if not can_process or space_info is None:
+            logger.warning(f"Cannot reserve {bytes} bytes for {path}: insufficient space")
+            return None
+
+        with self._reservation_lock:
+            # 再次检查（可能空间已被其他线程占用）
+            current_reserved = self._reservations.get(path, 0)
+            effective_free = space_info.total_bytes - (space_info.used_bytes + current_reserved)
+            required_with_margin = self.config.get_required_space_with_margin(bytes)
+
+            if effective_free < required_with_margin:
+                logger.warning(f"Cannot reserve {bytes} bytes for {path}: space changed during reservation")
                 return None
 
             # 增加预留
-            current_reserved = self._reservations.get(path, 0)
             self._reservations[path] = current_reserved + bytes
 
             reservation = SpaceReservation(reserved_bytes=bytes, path=path)

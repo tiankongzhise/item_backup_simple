@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run python -c:*)",
+      "Bash(if exist \"D:\\\\测试文件备份\" dir \"D:\\\\测试文件备份\")",
+      "Bash(uv run python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
