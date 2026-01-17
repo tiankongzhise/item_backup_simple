@@ -8,7 +8,7 @@ from collections import defaultdict, deque
 import json
 import os
 from pathlib import Path
-
+from ..config import ZipConfig
 
 @dataclass
 class ProcessingMetrics:
@@ -297,21 +297,14 @@ class MonitoringSystem:
     
     def _get_disk_usage(self) -> Dict[str, int]:
         """获取磁盘使用情况"""
-        try:
-            import psutil
-            disk = psutil.disk_usage('/')
-            return {
-                "used": disk.used,
-                "total": disk.total,
-                "free": disk.free
-            }
-        except ImportError:
-            # 如果没有psutil，返回模拟数据
-            return {
-                "used": 50 * 1024 * 1024 * 1024,  # 50GB
-                "total": 100 * 1024 * 1024 * 1024,  # 100GB
-                "free": 50 * 1024 * 1024 * 1024   # 50GB
-            }
+        import psutil
+        disk = psutil.disk_usage(ZipConfig.zipped_folder)
+        return {
+            "used": disk.used,
+            "total": disk.total,
+            "free": disk.free
+        }
+
     
     def _check_alerts(self):
         """检查告警条件"""

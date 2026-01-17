@@ -8,7 +8,7 @@ class ProcessingConfig:
     """文件处理配置"""
     
     # 磁盘空间管理配置
-    max_disk_usage_gb: int = 300  # 最大磁盘使用量(GB)
+    max_disk_usage_gb: int = 80  # 最大磁盘使用量(GB)
     space_check_interval: int = 30  # 空间检查间隔(秒)
     
     # 处理流程配置
