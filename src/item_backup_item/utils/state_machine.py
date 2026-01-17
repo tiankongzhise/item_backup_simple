@@ -16,7 +16,7 @@ class StateMachine:
         if self._is_initialized:
             return
         self._is_initialized = True
-        self.state_list = ['classify','hashed','zipped','zip_file_hashed','unzipped','unzip_hashed','uploaded','delete']
+        self.state_list = ['index','classify','hashed','zipped','zip_file_hashed','unzipped','unzip_hashed','uploaded','delete']
         self.state_dict = {state: i for i, state in enumerate(self.state_list)}
         print(f'state_dict:{self.state_dict}')
         self.current_state = None
